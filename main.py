@@ -32,10 +32,10 @@ def import_headlines(csv_path):
         df = pd.read_csv(csv_path)
         
         #nlp processing
-        # nltk.download('stopwords')
+        nltk.download('stopwords')
 
-        # stop_words = set(stopwords.words('english'))
-        # df['headline_text'] = df['headline_text'].apply(lambda x: ' '.join([word for word in x.split() if word.lower() not in stop_words]))
+        stop_words = set(stopwords.words('english'))
+        df['headline_text'] = df['headline_text'].apply(lambda x: ' '.join([word for word in x.split() if word.lower() not in stop_words]))
 
         data = df.to_dict(orient='records') 
 
