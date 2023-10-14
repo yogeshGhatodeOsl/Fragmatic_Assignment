@@ -13,16 +13,19 @@ import nltk
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 
 sid = SentimentIntensityAnalyzer()
-
 nltk.download('vader_lexicon')
 nlp = spacy.load('en_core_web_sm')
-
 
 client = MongoClient('localhost', 27017) 
 db = client['fragmatic_assignment']
 collection = db['dataset_all']
 
-@click.command()
+
+@click.group()
+def cli():
+    pass
+
+@cli.command()
 @click.argument('csv_path')
 def import_headlines(csv_path):
     start_time = time.time()
@@ -37,7 +40,7 @@ def import_headlines(csv_path):
         stop_words = set(stopwords.words('english'))
         df['headline_text'] = df['headline_text'].apply(lambda x: ' '.join([word for word in x.split() if word.lower() not in stop_words]))
 
-        data = df.to_dict(orient='records') 
+        data = df.to_dict(orient='records')
 
         #storing in database
         collection.insert_many(data)
@@ -51,10 +54,9 @@ def import_headlines(csv_path):
 
 
 
-## second task :
+#  second task :
 
-
-
+@cli.command()
 def extract_entities_sentiment():
     start_time = time.time()
 
@@ -83,18 +85,16 @@ def extract_entities_sentiment():
 
 # third task : 
 
-
-
 from collections import Counter
 
-
+@cli.command()
 def retrieve_top_100_entities_with_type():
     start_time = time.time()
 
     documents = collection.find({}, {"entities": 1})
 
     entity_counter = Counter()
-    entity_name_arr = []
+    # entity_name_arr = []
     
     allowed_entity_types = ["PERSON", "ORG", "LOC"]
 
@@ -116,18 +116,18 @@ def retrieve_top_100_entities_with_type():
         entity_text, entity_type = entity
         # print(f"{i}. Entity Text: {entity_text}, Entity Name: {entity_type}, Frequency: {count}")
         print(f"Entity Text: {entity_text}")
-        entity_name_arr.append(entity_text)
+        # entity_name_arr.append(entity_text)   # adding all entity name came in top_100_entities.
 
 
     end_time = time.time()
     execution_time = end_time - start_time
     print(f"Execution Time: {execution_time} seconds")
-    return entity_name_arr
-
+    # return entity_name_arr
 
 
 # task 4 :
-
+@cli.command()
+@click.argument('entity_name')
 def retrieve_all_headlines_for_entity(entity_name):
     start_time = time.time()
 
@@ -146,17 +146,10 @@ def retrieve_all_headlines_for_entity(entity_name):
 
 
 
+cli.add_command(import_headlines)
+cli.add_command(extract_entities_sentiment)
+cli.add_command(retrieve_top_100_entities_with_type)
+cli.add_command(retrieve_all_headlines_for_entity)
 
-if __name__ == '__main__':
-
-    #  task 1 function :
-    import_headlines()
-
-    # task 2 function : 
-    # extract_entities_sentiment()
-
-    # task 3 function :
-    # retrieve_top_100_entities_with_type()
-
-    # task 4 function : 
-    # retrieve_all_headlines_for_entity("deepak")
+if __name__ == "__main__":
+    cli()
